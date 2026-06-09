@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5 Palavras</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #fafaf8;
+    --surface: #ffffff;
+    --text: #1a1a18;
+    --muted: #888880;
+    --border: rgba(0,0,0,0.08);
+    --border-strong: rgba(0,0,0,0.14);
+    --accent: #1a1a18;
+    --accent-fg: #fafaf8;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 1rem;
+  }
+
+  .grain {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+  }
+
+  .page {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 680px;
+    padding: 4rem 0 5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* HEADER */
+  .header {
+    text-align: center;
+    margin-bottom: 3rem;
+    width: 100%;
+    position: relative;
+  }
+
+  .logo-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: var(--text);
+    color: var(--bg);
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    margin-bottom: 1.25rem;
+    letter-spacing: -1px;
+  }
+
+  .header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(32px, 6vw, 48px);
+    font-weight: 400;
+    letter-spacing: -1.5px;
+    line-height: 1.05;
+    color: var(--text);
+  }
+
+  .header h1 em {
+    font-style: italic;
+    color: var(--muted);
+  }
+
+  .header p {
+    margin-top: 10px;
+    font-size: 15px;
+    color: var(--muted);
+    font-weight: 300;
+    letter-spacing: 0.1px;
+  }
+
+  /* ROULETTE WIDGET */
+  .roulette-widget {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    min-width: 110px;
+  }
+
+  .roulette-display {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 10px 14px;
+    text-align: center;
+    min-width: 100px;
+  }
+
+  .roulette-letter {
+    font-family: 'DM Serif Display', serif;
+    font-size: 32px;
+    font-weight: 400;
+    letter-spacing: -1px;
+    color: var(--text);
+    line-height: 1;
+    display: block;
+    transition: opacity 0.15s;
+  }
+
+  .roulette-letter.spinning {
+    animation: spinLetter 0.08s linear infinite;
+  }
+
+  @keyframes spinLetter {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.3; transform: scale(0.85); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+
+  .roulette-label {
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 2px;
+    display: block;
+  }
+
+  .btn-spin {
+    background: var(--text);
+    color: var(--accent-fg);
+    border: none;
+    border-radius: 10px;
+    padding: 7px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: opacity 0.15s, transform 0.1s;
+    width: 100%;
+  }
+  .btn-spin:hover { opacity: 0.75; }
+  .btn-spin:active { transform: scale(0.95); }
+  .btn-spin:disabled { opacity: 0.4; cursor: default; }
+
+  .roulette-history {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    text-align: right;
+    max-width: 110px;
+    line-height: 1.6;
+  }
+
+  .letter-rule {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    justify-content: flex-end;
+  }
+
+  .letter-rule label {
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+    line-height: 1.4;
+  }
+
+  .letter-rule input[type="checkbox"] {
+    accent-color: var(--text);
+    width: 13px;
+    height: 13px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  /* ROUND INFO */
+  .round-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 2rem;
+    width: 100%;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.4s, transform 0.4s;
+  }
+
+  .round-info.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .round-label {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .progress-track {
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--text);
+    border-radius: 2px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 0%;
+  }
+
+  .round-counter {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* LOADING */
+  .loading-indicator {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 2rem 0;
+    width: 100%;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+  }
+
+  .loading-indicator.show { display: flex; }
+
+  .loading-star {
+    font-size: 16px;
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.3; transform: scale(0.9); }
+    50% { opacity: 1; transform: scale(1.1); }
+  }
+
+  /* CARDS */
+  .cards-grid {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 2.5rem;
+  }
+
+  .q-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.1rem 1.4rem;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.4s ease, transform 0.4s ease, border-color 0.25s;
+    min-height: 62px;
+  }
+
+  .q-card.in { opacity: 1; transform: translateY(0); }
+  .q-card.revealed { border-color: var(--border-strong); }
+
+  .q-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--border-strong);
+    min-width: 22px;
+    line-height: 1;
+    user-select: none;
+    flex-shrink: 0;
+  }
+
+  .q-body {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    min-width: 0;
+  }
+
+  .q-text {
+    font-size: 15.5px;
+    font-weight: 300;
+    line-height: 1.6;
+    color: var(--text);
+    flex: 1;
+    min-width: 0;
+    transition: filter 0.4s ease, opacity 0.4s ease;
+  }
+
+  .q-text.hidden {
+    filter: blur(8px);
+    opacity: 0.3;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  .q-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    align-items: flex-end;
+    flex-shrink: 0;
+  }
+
+  .btn-reveal {
+    flex-shrink: 0;
+    background: var(--text);
+    color: var(--accent-fg);
+    border: none;
+    border-radius: 10px;
+    padding: 7px 15px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+
+  .btn-reveal:hover { opacity: 0.75; }
+  .btn-reveal:active { transform: scale(0.95); }
+
+  .btn-reveal.done {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    pointer-events: none;
+    opacity: 0.45;
+    font-size: 11px;
+  }
+
+  .btn-regen {
+    flex-shrink: 0;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 5px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 400;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s, transform 0.1s, opacity 0.15s;
+  }
+
+  .btn-regen:hover { color: var(--text); border-color: var(--border-strong); }
+  .btn-regen:active { transform: scale(0.95); }
+  .btn-regen:disabled { opacity: 0.35; cursor: default; }
+
+  /* BUTTONS */
+  .btn-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: var(--accent-fg);
+    border: none;
+    border-radius: 14px;
+    padding: 16px 40px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: -0.2px;
+    transition: opacity 0.15s, transform 0.12s;
+    min-width: 200px;
+  }
+
+  .btn-primary:hover { opacity: 0.82; }
+  .btn-primary:active { transform: scale(0.97); }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 13px 32px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s, transform 0.12s;
+    min-width: 200px;
+  }
+
+  .btn-secondary:hover { color: var(--text); border-color: var(--border-strong); }
+  .btn-secondary:active { transform: scale(0.97); }
+
+  /* END SCREEN */
+  .end-screen {
+    text-align: center;
+    padding: 1rem 0 0;
+    width: 100%;
+    display: none;
+  }
+
+  .end-screen.show { display: flex; flex-direction: column; align-items: center; }
+
+  .end-icon { font-size: 40px; margin-bottom: 1rem; line-height: 1; }
+
+  .end-screen h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    font-weight: 400;
+    letter-spacing: -0.8px;
+    margin-bottom: 6px;
+  }
+
+  .end-screen p {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 1.75rem;
+    font-weight: 300;
+  }
+
+  .hint {
+    margin-top: 2.5rem;
+    font-size: 12px;
+    color: var(--border-strong);
+    text-align: center;
+    letter-spacing: 0.05em;
+  }
+
+  /* LETTER BADGE */
+  .letter-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    padding: 3px 10px;
+    font-size: 12px;
+    color: var(--text);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.3s, transform 0.3s;
+  }
+
+  .letter-badge.show { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 480px) {
+    .page { padding: 2.5rem 0 4rem; }
+    .header { margin-bottom: 2.25rem; }
+    .q-card { padding: 1rem 1.1rem; gap: 10px; }
+    .q-text { font-size: 14.5px; }
+    .btn-primary { padding: 15px 32px; }
+    .btn-reveal { padding: 6px 12px; font-size: 11px; }
+    .btn-regen { padding: 4px 10px; font-size: 10px; }
+    .roulette-widget { position: static; align-items: center; width: 100%; flex-direction: row; flex-wrap: wrap; justify-content: center; margin-bottom: 1.5rem; }
+    .roulette-display { min-width: 80px; }
+    .roulette-history { text-align: center; }
+    .letter-rule { justify-content: center; }
+    .header { padding-bottom: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="grain"></div>
+
+<div class="page">
+
+  <header class="header">
+    <div class="logo-mark">5</div>
+    <h1>Cinco <em>Palavras</em></h1>
+    <p>Escolha 1 objeto. Defenda com tudo.</p>
+
+    <!-- ROULETTE WIDGET -->
+    <div class="roulette-widget" id="rouletteWidget">
+      <div class="roulette-display">
+        <span class="roulette-letter" id="rouletteLetter">–</span>
+        <span class="roulette-label">Letra</span>
+      </div>
+      <button class="btn-spin" id="btnSpin" onclick="spinRoulette()">Girar</button>
+      <div class="letter-rule">
+        <input type="checkbox" id="useLetterRule" onchange="toggleLetterRule()">
+        <label for="useLetterRule">Usar letra sorteada</label>
+      </div>
+      <div class="roulette-history" id="rouletteHistory"></div>
+    </div>
+  </header>
+
+  <div class="letter-badge" id="letterBadge"></div>
+
+  <div class="round-info" id="roundInfo">
+    <span class="round-label" id="roundLabel">Rodada 1 de 5</span>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <span class="round-counter" id="roundCounter">1 / 5</span>
+  </div>
+
+  <div class="loading-indicator" id="loadingIndicator">
+    <span class="loading-star">✦</span>
+    <span>A IA está criando situações...</span>
+  </div>
+
+  <div class="cards-grid" id="cardsGrid"></div>
+
+  <div class="btn-area" id="btnArea">
+    <button class="btn-primary" id="mainBtn" onclick="handleMain()">Nova Rodada</button>
+  </div>
+
+  <div class="end-screen" id="endScreen">
+    <div class="end-icon">🎯</div>
+    <h2>Fim das rodadas!</h2>
+    <p>Todas as 5 rodadas foram concluídas.</p>
+    <button class="btn-primary" onclick="restartGame()">Jogar de novo</button>
+    <button class="btn-secondary" style="margin-top:8px" onclick="restartGame()">Nova partida</button>
+  </div>
+
+  <p class="hint" id="hintText">5 situações · 5 jogadores · 1 vencedor</p>
+
+</div>
+
+<script>
+// ===================== CONFIG =====================
+// IA removida - geração local inteligente de perguntas
+
+const MAX_ROUNDS = 5;
+const QUESTIONS_PER_ROUND = 5;
+const CACHE_KEY = 'cinco_q_cache';
+const HISTORY_KEY = 'cinco_q_history';
+const LETTER_HISTORY_KEY = 'cinco_letter_history';
+const CACHE_BATCH = 15; // generate more than needed
+const MAX_QUESTION_HISTORY = 100;
+const MAX_LETTER_HISTORY = 10;
+
+// ===================== STATE =====================
+let round = 0;
+let currentQuestions = [];
+let letterHistory = JSON.parse(localStorage.getItem(LETTER_HISTORY_KEY) || '[]');
+let currentLetter = null;
+let useLetterRule = false;
+let isLoading = false;
+
+// ===================== ROULETTE =====================
+const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+function getAvailableLetters() {
+  const recent = letterHistory.slice(-MAX_LETTER_HISTORY);
+  const available = ALPHABET.filter(l => !recent.includes(l));
+  return available.length > 0 ? available : ALPHABET;
+}
+
+function spinRoulette() {
+  const btn = document.getElementById('btnSpin');
+  const display = document.getElementById('rouletteLetter');
+  btn.disabled = true;
+  display.classList.add('spinning');
+
+  const available = getAvailableLetters();
+  let ticks = 0;
+  const totalTicks = 18 + Math.floor(Math.random() * 10);
+  const interval = setInterval(function() {
+    display.textContent = ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
+    ticks++;
+    if (ticks >= totalTicks) {
+      clearInterval(interval);
+      const chosen = available[Math.floor(Math.random() * available.length)];
+      display.textContent = chosen;
+      display.classList.remove('spinning');
+      currentLetter = chosen;
+      letterHistory.push(chosen);
+      if (letterHistory.length > MAX_LETTER_HISTORY * 2) letterHistory = letterHistory.slice(-MAX_LETTER_HISTORY);
+      localStorage.setItem(LETTER_HISTORY_KEY, JSON.stringify(letterHistory));
+      updateLetterHistory();
+      updateLetterBadge();
+      btn.disabled = false;
+    }
+  }, 80);
+}
+
+function toggleLetterRule() {
+  useLetterRule = document.getElementById('useLetterRule').checked;
+  updateLetterBadge();
+}
+
+function updateLetterBadge() {
+  const badge = document.getElementById('letterBadge');
+  if (useLetterRule && currentLetter) {
+    badge.textContent = '✦ Objetos devem começar com a letra ' + currentLetter;
+    badge.classList.add('show');
+  } else {
+    badge.classList.remove('show');
+  }
+}
+
+function updateLetterHistory() {
+  const el = document.getElementById('rouletteHistory');
+  const recent = letterHistory.slice(-MAX_LETTER_HISTORY);
+  if (recent.length === 0) { el.textContent = ''; return; }
+  el.innerHTML = '<span style="opacity:0.5">Últimas: </span>' + recent.join(' · ');
+}
+
+// ===================== QUESTION HISTORY =====================
+function getQuestionHistory() {
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch(e) { return []; }
+}
+
+function addToHistory(questions) {
+  let h = getQuestionHistory();
+  h = [...h, ...questions];
+  if (h.length > MAX_QUESTION_HISTORY) h = h.slice(-MAX_QUESTION_HISTORY);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(h));
+}
+
+// ===================== CACHE =====================
+function getCache() {
+  try { return JSON.parse(localStorage.getItem(CACHE_KEY) || '[]'); } catch(e) { return []; }
+}
+
+function setCache(arr) {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(arr)); } catch(e) {}
+}
+
+function pickFromCache(n) {
+  let cache = getCache();
+  const history = getQuestionHistory();
+  // filter out anything in history
+  cache = cache.filter(q => !history.includes(q));
+  if (cache.length < n) return null;
+  const picked = cache.splice(0, n);
+  setCache(cache);
+  return picked;
+}
+
+// ===================== GERADOR LOCAL =====================
+const QUESTION_TEMPLATES = [
+"Você acorda e descobre que {evento}.",
+"Durante uma missão, {evento}.",
+"Você precisa resolver uma situação: {evento}.",
+"Sem ajuda de ninguém, {evento}.",
+"Em menos de 5 minutos, {evento}."
+];
+
+const EVENTS = [
+"uma enchente começa a invadir o prédio",
+"um animal selvagem bloqueia sua saída",
+"você fica preso em um elevador sem energia",
+"uma ponte desaba enquanto você atravessa",
+"uma tempestade destrói seu abrigo",
+"você acorda dentro de um shopping fechado",
+"um incêndio impede sua rota de fuga",
+"você precisa enviar um sinal de socorro urgente",
+"um túnel começa a desmoronar",
+"você fica isolado em uma ilha desconhecida",
+"um drone perdeu o controle e segue você",
+"uma multidão entra em pânico durante um evento",
+"você precisa escapar de um prédio inundado",
+"um apagão deixa toda a cidade no escuro",
+"você precisa atravessar um rio perigoso"
+];
+
+async function fetchQuestionsFromAI(count) {
+  const history = getQuestionHistory();
+  const results = [];
+  let attempts = 0;
+
+  while(results.length < count && attempts < count * 10){
+    attempts++;
+    const template = QUESTION_TEMPLATES[Math.floor(Math.random()*QUESTION_TEMPLATES.length)];
+    const event = EVENTS[Math.floor(Math.random()*EVENTS.length)];
+    const q = template.replace('{evento}', event);
+
+    if(!history.includes(q) && !results.includes(q)){
+      results.push(q);
+    }
+  }
+
+  return results;
+}
+
+async function getQuestions(n) {
+  const fromCache = pickFromCache(n);
+  if (fromCache) return fromCache;
+
+  const questions = await fetchQuestionsFromAI(CACHE_BATCH);
+  const picked = questions.slice(0, n);
+  const remaining = questions.slice(n);
+
+  if (remaining.length) {
+    const existing = getCache();
+    setCache([...existing, ...remaining].slice(0, 60));
+  }
+
+  while (picked.length < n) {
+    picked.push(FALLBACK_QUESTIONS[Math.floor(Math.random()*FALLBACK_QUESTIONS.length)]);
+  }
+
+  return picked;
+}
+
+// ===================== CARD RENDERING =====================
+function buildCard(q, i, isNew) {
+  const card = document.createElement('div');
+  card.className = 'q-card';
+  card.id = 'card-' + i;
+  card.innerHTML =
+    '<span class="q-num">' + (i + 1) + '</span>' +
+    '<div class="q-body">' +
+      '<span class="q-text hidden" id="qt-' + i + '">' + escHtml(q) + '</span>' +
+      '<div class="q-actions">' +
+        '<button class="btn-reveal" id="btn-reveal-' + i + '" onclick="revealCard(this,' + i + ')">Mostrar</button>' +
+        '<button class="btn-regen" id="btn-regen-' + i + '" onclick="regenCard(' + i + ')">Regenerar</button>' +
+      '</div>' +
+    '</div>';
+  return card;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function revealCard(btn, idx) {
+  const text = document.getElementById('qt-' + idx);
+  text.classList.remove('hidden');
+  btn.textContent = '✓ Revelada';
+  btn.classList.add('done');
+  btn.closest('.q-card').classList.add('revealed');
+}
+
+async function regenCard(idx) {
+  const regenBtn = document.getElementById('btn-regen-' + idx);
+  const revealBtn = document.getElementById('btn-reveal-' + idx);
+  const textEl = document.getElementById('qt-' + idx);
+  const card = document.getElementById('card-' + idx);
+
+  regenBtn.disabled = true;
+  regenBtn.textContent = '...';
+
+  // animate card out
+  card.style.transition = 'opacity 0.2s, transform 0.2s';
+  card.style.opacity = '0';
+  card.style.transform = 'translateY(8px)';
+
+  try {
+    // try cache first, otherwise fetch 1
+    let newQ = null;
+    const fromCache = pickFromCache(1);
+    if (fromCache) {
+      newQ = fromCache[0];
+    } else {
+      const qs = await fetchQuestionsFromAI(CACHE_BATCH);
+      const history = getQuestionHistory();
+      const fresh = qs.filter(q => !history.includes(q) && q !== textEl.textContent);
+      if (fresh.length > 0) {
+        newQ = fresh[0];
+        const rest = fresh.slice(1);
+        if (rest.length > 0) {
+          const existing = getCache();
+          setCache([...existing, ...rest].slice(0, 60));
+        }
+      }
+    }
+
+    if (!newQ) newQ = FALLBACK_QUESTIONS[Math.floor(Math.random() * FALLBACK_QUESTIONS.length)];
+
+    // update question in current state
+    currentQuestions[idx] = newQ;
+    textEl.textContent = newQ;
+
+    // reset reveal state
+    textEl.classList.add('hidden');
+    revealBtn.textContent = 'Mostrar';
+    revealBtn.classList.remove('done');
+    card.classList.remove('revealed');
+
+  } catch(e) {
+    console.error(e);
+  }
+
+  // animate card back
+  setTimeout(function() {
+    card.style.transition = 'opacity 0.35s ease, transform 0.35s ease, border-color 0.25s';
+    card.style.opacity = '1';
+    card.style.transform = 'translateY(0)';
+    regenBtn.disabled = false;
+    regenBtn.textContent = 'Regenerar';
+  }, 50);
+}
+
+// ===================== MAIN GAME LOGIC =====================
+async function handleMain() {
+  if (round >= MAX_ROUNDS || isLoading) return;
+  round++;
+  isLoading = true;
+
+  const roundInfo = document.getElementById('roundInfo');
+  const cardsGrid = document.getElementById('cardsGrid');
+  const progressFill = document.getElementById('progressFill');
+  const roundLabel = document.getElementById('roundLabel');
+  const roundCounter = document.getElementById('roundCounter');
+  const mainBtn = document.getElementById('mainBtn');
+  const hintText = document.getElementById('hintText');
+  const loadingIndicator = document.getElementById('loadingIndicator');
+
+  mainBtn.disabled = true;
+  roundInfo.classList.add('visible');
+  roundLabel.textContent = 'Rodada ' + round + ' de ' + MAX_ROUNDS;
+  roundCounter.textContent = round + ' / ' + MAX_ROUNDS;
+  progressFill.style.width = (round / MAX_ROUNDS * 100) + '%';
+
+  // animate old cards out
+  Array.from(cardsGrid.children).forEach(c => {
+    c.classList.remove('in');
+    c.style.transition = 'opacity 0.2s, transform 0.2s';
+  });
+
+  const delay = round === 1 ? 0 : 220;
+  await new Promise(r => setTimeout(r, delay));
+
+  cardsGrid.innerHTML = '';
+  loadingIndicator.classList.add('show');
+
+  let questions;
+  try {
+    questions = await getQuestions(QUESTIONS_PER_ROUND);
+  } catch(e) {
+    console.error(e);
+    questions = shuffle(FALLBACK_QUESTIONS).slice(0, QUESTIONS_PER_ROUND);
+  }
+
+  addToHistory(questions);
+  currentQuestions = [...questions];
+
+  loadingIndicator.classList.remove('show');
+
+  questions.forEach(function(q, i) {
+    const card = buildCard(q, i, true);
+    cardsGrid.appendChild(card);
+    requestAnimationFrame(function() {
+      setTimeout(function() { card.classList.add('in'); }, 60 + i * 80);
+    });
+  });
+
+  isLoading = false;
+  mainBtn.disabled = false;
+
+  if (round >= MAX_ROUNDS) {
+    mainBtn.style.opacity = '0';
+    mainBtn.style.pointerEvents = 'none';
+    setTimeout(function() {
+      document.getElementById('btnArea').style.display = 'none';
+      document.getElementById('endScreen').classList.add('show');
+      hintText.style.display = 'none';
+    }, 1200);
+  } else {
+    mainBtn.textContent = 'Próxima Rodada';
+  }
+}
+
+function restartGame() {
+  round = 0;
+  currentQuestions = [];
+  document.getElementById('roundInfo').classList.remove('visible');
+  document.getElementById('progressFill').style.width = '0%';
+  document.getElementById('cardsGrid').innerHTML = '';
+  document.getElementById('endScreen').classList.remove('show');
+  const btnArea = document.getElementById('btnArea');
+  btnArea.style.display = 'flex';
+  const mainBtn = document.getElementById('mainBtn');
+  mainBtn.style.opacity = '1';
+  mainBtn.style.pointerEvents = '';
+  mainBtn.disabled = false;
+  mainBtn.textContent = 'Nova Rodada';
+  document.getElementById('hintText').style.display = '';
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ===================== INIT =====================
+updateLetterHistory();
+
+// ===================== FALLBACK QUESTIONS =====================
+const FALLBACK_QUESTIONS = [
+  "Seu quarto está pegando fogo e a maçaneta derreteu.",
+  "Você ficou preso dentro de um elevador inundando.",
+  "Um urso está bloqueando a única saída da floresta.",
+  "Você acordou dentro de um supermercado fechado no escuro.",
+  "Seu carro caiu num lago congelado e está afundando.",
+  "Você precisa atravessar um rio em menos de 3 minutos.",
+  "Você está ilhado no topo de um prédio em chamas.",
+  "Você precisa sinalizar socorro numa ilha deserta.",
+  "Você está preso numa caverna com a maré subindo.",
+  "Você precisa sobreviver uma noite num deserto gelado.",
+  "Você precisa escalar um muro liso de 3 metros para escapar.",
+  "Seu barco está afundando a quilômetros da costa.",
+  "Você precisa apagar um incêndio com recursos mínimos.",
+  "Um desconhecido está tentando arrombar sua porta.",
+  "Você precisa construir um abrigo antes da tempestade chegar.",
+  "Você está preso numa sala que vai enchendo de água.",
+  "Você precisa cruzar um campo minado sem GPS.",
+  "Seu avião fez um pouso de emergência na selva.",
+  "Você precisa se defender de uma cobra venenosa.",
+  "Você ficou preso num buraco de 4 metros de profundidade.",
+  "O teto do túnel está desmoronando e a saída está bloqueada.",
+  "Você precisa atravessar um penhasco sem corda.",
+  "Você acordou acorrentado numa cadeira no escuro.",
+  "Seu paraquedas não abriu e você está a 300 metros do chão.",
+  "Você está preso numa tempestade de neve sem abrigo.",
+];
+</script>
+</body>
+</html>
